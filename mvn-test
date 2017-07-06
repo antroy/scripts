@@ -1,0 +1,40 @@
+#!/bin/bash
+
+eval set -- `getopt -o ri --long it,re -n '$0' -- "$@"`
+
+
+while true 
+do
+    case "$1" in
+        -i|--it) IT=true; IT_PROP="it."; shift;;
+        -r|--re) RE=true; shift;;
+        --) shift; break;;
+    esac
+done
+
+TEST=$1
+
+if [ "$TEST" != "" ]
+then
+    if [[ "$RE" == "true" ]]
+    then
+        TEST="%regex[$TEST]"
+    fi
+
+    if [[ "$TEST" != *"%regex"* ]]
+    then
+        TEST=`echo $TEST | sed 's/\./#/'`
+        TEST=`echo $TEST | sed 's/:[0-9]\+$//'`
+    fi
+    TEST_STR="\"-D${IT_PROP}test=${TEST}\""
+fi
+
+if [[ "$IT" == "true" ]]
+then
+    CMD="mvn -Dtest=NO_UNIT_TESTS -DfailIfNoTests=false $TEST_STR verify"
+else
+    CMD="mvn $TEST_STR test"
+fi
+
+echo $CMD
+exec $CMD
