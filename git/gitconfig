@@ -5,7 +5,7 @@
 # path = /path/to/git/gitconfig
 
 [http]
-sslverify = false
+sslverify = true
 
 [color]
 # Switch colour on.
@@ -32,7 +32,7 @@ sslverify = false
 
 # Example command shortcuts:
     com = commit -am
-    co = checkout
+#    co = checkout
     f = fetch
     m = merge
     sp = show --pretty=oneline
