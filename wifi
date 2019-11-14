@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+import argparse
+import argcomplete
+from itertools import zip_longest
+import re
+import subprocess
+import sys
+
+class Wifi:
+    def __init__(self, options):
+        self.options = options
+
+    def __call__(self):
+        getattr(self, self.options.command)()
+
+    def parse_connection(self, line):
+        p = r"(?P<active>\*?)\s*(?P<name>[0-9a-zA-Z_-]+)\s+.*(?P<speed>\d+ Mbit/s)\s+\d+\s+(?P<info>.*)"
+        m = re.match(p, line)
+        out = m.groupdict()
+        return out
+
+    def connect(self):
+        output = subprocess.run(['nmcli', 'device', 'wifi', 'list'], capture_output=True, encoding="utf-8").stdout
+        
+        lines = [self.parse_connection(x.strip()) for x in output.split("\n")[1:] if x and not x.strip().startswith("--")]
+        display_lines = ["{name:25} {info} {active}".format(**x) for x in lines]
+        networks = ["%2d) %s" % network for network in zip_longest(range(1, len(lines)+1), display_lines)]
+        print("\n".join(networks))
+        print("\nChoose a network and press enter:")
+
+        digit = input()
+
+        if not digit.isdigit():
+            print("You must choose a number. Aborting.")
+            exit(1)
+
+        choice = int(digit) - 1
+
+        if choice < 0 or choice > len(lines) - 1:
+            print("The choice must be from {} to {}".format(1, len(lines)))
+            exit(1)
+            
+        network = lines[choice]['name']
+        
+        print("Connecting to %s" % network)
+
+        subprocess.run(['nmcli', 'device', 'wifi', 'connect', network, '--ask'])
+
+    def scan(self):
+        subprocess.run(['nmcli', 'device', 'wifi', 'list'])
+
+    def status(self):
+        subprocess.run(['nmcli', 'connection', 'show'])
+
+def opts():
+    if len(sys.argv) == 1:
+        sys.argv.append("connect")
+
+    parser = argparse.ArgumentParser(description='Wrapper around nmcli')
+    parser.add_argument('command', help='Run command against API.', nargs='?', 
+                        choices=["connect", "scan", "status"])
+
+    argcomplete.autocomplete(parser)
+
+    out = parser.parse_args()
+
+    return out
+
+options = opts()
+Wifi(options)()

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 import argparse
 import re
+import os
 import subprocess
 
 completion_enabled = False
@@ -27,7 +29,9 @@ def fix_pasted_test(test):
 
 options = opts()
 
-command = ['mvn', 'clean', 'verify']
+mvn = './mvnw' if os.path.exists('mvnw') else 'mvn'
+
+command = [mvn, 'clean', 'verify']
 
 if options.test:
     command.append("-Dtest=%s" % fix_pasted_test(options.test))
