@@ -3,10 +3,12 @@
 
 import argparse
 import argcomplete
+from getpass import getpass
 from itertools import zip_longest
 import re
 import subprocess
 import sys
+
 
 class Wifi:
     def __init__(self, options):
@@ -45,8 +47,14 @@ class Wifi:
         network = lines[choice]['name']
         
         print("Connecting to %s" % network)
+        cmd = ['nmcli', 'device', 'wifi', 'connect', network]
+        print(" ".join(cmd))
 
-        subprocess.run(['nmcli', 'device', 'wifi', 'connect', network, '--ask'])
+        if self.options.password:
+            password = getpass("Password: ")
+            cmd.extend(['password', password])
+
+        subprocess.run(cmd)
 
     def scan(self):
         subprocess.run(['nmcli', 'device', 'wifi', 'list'])
@@ -61,6 +69,7 @@ def opts():
     parser = argparse.ArgumentParser(description='Wrapper around nmcli')
     parser.add_argument('command', help='Run command against API.', nargs='?', 
                         choices=["connect", "scan", "status"])
+    parser.add_argument('-p', '--password', help="Ask for a password", action="store_true", default=False)
 
     argcomplete.autocomplete(parser)
 

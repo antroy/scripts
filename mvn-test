@@ -31,12 +31,12 @@ options = opts()
 
 mvn = './mvnw' if os.path.exists('mvnw') else 'mvn'
 
-command = [mvn, 'clean', 'verify']
+command = [mvn, 'clean', 'verify', '-Ddependency-check.skip=true']
 
-if options.test:
+if options.test is not None:
     command.append("-Dtest=%s" % fix_pasted_test(options.test))
     command.append("-Dit.test=NONE")
-elif options.it:
+elif options.it is not None:
     command.append("-Dtest=NONE")
     command.append("-DfailIfNoTests=false")
     command.append("-Dit.test=%s" % fix_pasted_test(options.it))
